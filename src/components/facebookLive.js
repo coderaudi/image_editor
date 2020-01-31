@@ -24,8 +24,6 @@ class FacebookLive extends Component {
     };
 
     goLive = () =>{
-
-
         let accessToken = this.state.userDetails.accessToken;
         axios
         .post(
