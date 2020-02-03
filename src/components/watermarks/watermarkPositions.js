@@ -222,8 +222,6 @@ class WatermarkPosition extends Component {
         console.log(` Logo width  : ${logoW} - Logo height : ${logoH} - logo opacity : ${this.state.logoOpacity}` );  // er -40
        
        
- 
-
         let originalImgWidth = 1000;
         let originalImgHight = 667;
 
@@ -231,20 +229,48 @@ class WatermarkPosition extends Component {
         let aspectRation =    userImg == "W" ?   originalImgWidth/1000 :  originalImgHight/600; 
 
 
+        let nLogoWidth = originalImgWidth * logoW/800 ;
+        let nLogoHeight = originalImgHight * logoH /533.6 ;
+
+        let nLogoOriginX = xMove * originalImgWidth /800 ;
+        let nLogoOriginY = yMove * originalImgHight /533.6 ;
+
 
         console.log(aspectRation);
         console.log(userImg);
 
         console.log(`final logo movement : xMove = ${xMove * aspectRation}, yMove=${yMove * aspectRation}`); 
         console.log(`final Logo width : ${logoW * aspectRation} - final Logo height : ${logoH  * aspectRation} - logo opacity : ${this.state.logoOpacity}` ); 
-   
-         let url = `ffmpeg -i ntr5.jpg -i logo3.jpg -filter_complex "[1]scale=${logoW}:${logoH}[a];[a]lut=a=val*0.9[b];[0][b] overlay=${xMove * aspectRation}:${yMove * aspectRation}" -y watermarkLogo.jpg`
-    
-       console.log(url);
+                                                              
+         let url = `ffmpeg -i ntr5.jpg -i logo3.jpg -filter_complex "[1]scale=${nLogoWidth}:${nLogoHeight}[a];[a]lut=a=val*0.9[b];[0][b] overlay=${nLogoOriginX}:${nLogoOriginY}" -y watermarkLogo.jpg`
+      // scale => width and h of logo 
+      // overlay => x y start position 
+        console.log(url);
     }
 
 
+    checkImg = () =>{
+        var myImg = document.querySelector("#sky");
+        var currWidth = myImg.clientWidth;
+        var currHeight = myImg.clientHeight;
+
+        var wmLogoImg = document.querySelector("#watermarkLogoImg");
+        var wmLogoImgcurrWidth = wmLogoImg.clientWidth;
+        var wmLogoImgcurrHeight = wmLogoImg.clientHeight;
+        
+        // alert("Current width=" + currWidth + ", " + "Original height=" + currHeight );
+        //  alert( "Current Lwidth=" + wmLogoImgcurrWidth + ", " + "Original L height=" + currHeight);
+    }
+
     getLogos = ()=>{
+
+        let textStyle = {
+            background: "red",
+            fontSize: this.state.fontSize,
+            opacity: `0.${this.state.opacity}`,
+            fontFamily: "Courier New"
+        }
+
 
         let logoStyle = {
             width: this.state.logoSize,
@@ -253,6 +279,11 @@ class WatermarkPosition extends Component {
 
 
         return <div>
+
+                       <div className="draggable-text" id="watermarkText" style={textStyle} >
+                            {this.state.watermarkText}
+                        </div>
+
                         <div className="draggable-logo" id="watermarkLogo" >
                             <img src={waterMark}
                                 id="watermarkLogoImg"
@@ -270,13 +301,7 @@ class WatermarkPosition extends Component {
 
     render() {
 
-        let textStyle = {
-            background: "red",
-            fontSize: this.state.fontSize,
-            opacity: `0.${this.state.opacity}`,
-            fontFamily: "Courier New"
-        }
-
+      
         let logoStyle = {
             width: this.state.logoSize,
             opacity: `0.${this.state.logoOpacity}`,
@@ -285,8 +310,10 @@ class WatermarkPosition extends Component {
         let editorConsole = {
 
             backgroundImage: `url(${this.state.file})`,
-            height : "500px",
-            width: "500px"
+            maxWidth:"100%",
+			display: "block",
+			margin: "auto",
+			width: "auto",
 
         }
 
@@ -297,8 +324,8 @@ class WatermarkPosition extends Component {
                     <h4>User inputs </h4>
                     <input type="file" onChange={this.handleChange}/>
 
-
-                     <img src={this.state.file}/>
+{/* 
+                     <img src={this.state.file}/> */}
                 </div>
 
                 <span>
@@ -309,7 +336,7 @@ class WatermarkPosition extends Component {
                     <button onClick={() => this.increaseLogo()}>WaterMark logo ++</button>
                     <button onClick={() => this.reduceLogo()}>WaterMark logo -- </button>
                     <button onClick={() => this.saveImg()}> Save Img</button>
-
+                    <button onClick={() => this.checkImg()}> check Img</button>
                     <button onClick={() => this.reduceLogoOpacity()}> logo Opacity -- </button>
                     <button onClick={() => this.increaseLogoOpacity()}> logo Opacity ++</button>
                     
@@ -319,16 +346,20 @@ class WatermarkPosition extends Component {
 
                 <div className="watermark-playground">
 
-                    <div className="editor-console" style={editorConsole}>
+                    <div className="editor-console">
 
-                        <div className="draggable-text" id="watermarkText" style={textStyle} >
-                            {this.state.watermarkText}
-                        </div>
+             
+
                         
-                         {this.getLogos()}
 
+                        <div>
+                           <img src={this.state.file}  id="sky" width="80%" />
+                           {this.getLogos()}
                         </div>
 
+                         
+
+                        </div>
 
                 </div>
 
