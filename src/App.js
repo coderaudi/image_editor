@@ -15,13 +15,15 @@ import TstEditor from "./components/watermarks/toast";
 
 import WatermarkPosition from "./components/watermarks/watermarkPositions";
 
+import FixedImg from "./components/watermarks/fixedImg";
+
 
 function App() {
   return (
     <div className="App">
       <header className="App-header">
         <div>
-        <WatermarkPosition />
+        <FixedImg />
         </div>
       </header>
     </div>
