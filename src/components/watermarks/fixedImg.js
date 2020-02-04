@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
 import demoImg from "../../assets/ntr5.jpg";
-import waterMark from "../../assets/resize_logo.png";
+// import waterMark from "../../assets/resize_logo.png";
 
-
+import waterMark from "../../assets/box.jpg";
 
 import "./index.css";
 const interact = require('interactjs')
@@ -69,7 +69,7 @@ class WatermarkPosition extends Component {
 
                     // minimum size
                     interact.modifiers.restrictSize({
-                        min: { width: 100, height: 100 }
+                        min: { width: 20, height: 20 }
                     })
                 ],
             })
@@ -133,6 +133,11 @@ class WatermarkPosition extends Component {
     }
 
 
+    handleChangeText = (e) => {
+        this.setState(
+            { watermarkText : e.target.value}
+        )
+    }
 
     addFont = () => {
 
@@ -192,10 +197,6 @@ class WatermarkPosition extends Component {
     }
 
 
-    handleFileInput = () => {
-
-    }
-
     saveImg = () => {
 
         // let waterMarkText = document.getElementById('watermarkText');
@@ -254,57 +255,51 @@ class WatermarkPosition extends Component {
 
     checkImg = () => {
 
-        var cover = document.querySelector("#cover");
-        var currWidth = cover.clientWidth;
-        var currHeight = cover.clientHeight;
+        // original img height and width
+        let originalCoverW = 2000; 
+        let originalCoverH = 1499;
 
-        var wmLogoImg = document.querySelector("#watermarkLogo");
-        var wmLogoImgcurrWidth = wmLogoImg.clientWidth;
-        var wmLogoImgcurrHeight = wmLogoImg.clientHeight;
+        // bg img wh  --> preivew img height widht 
+        let cover = document.querySelector("#cover");
+        let pervieCoverW = cover.clientWidth;
+        let pervieCoverH = cover.clientHeight;
 
+        // logo w h  ==> logo height and width on preview img 
+        let wmLogoImg = document.querySelector("#watermarkLogo");
+        let wmLogoImgcurrWidth = wmLogoImg.clientWidth;
+        let wmLogoImgcurrHeight = wmLogoImg.clientHeight - 4;
 
+        console.log("details- " );
+        console.log("original w-h- " ,originalCoverW , originalCoverH );
+        console.log("preview w-h- " ,pervieCoverW , pervieCoverH );
+        console.log("logo preivew w-h- " ,wmLogoImgcurrWidth , wmLogoImgcurrHeight );
 
-        console.log(`cover - ${currWidth}-${currHeight} == logo ${wmLogoImgcurrWidth} - ${wmLogoImgcurrHeight}`);
 
         let watermarkLogo = document.getElementById('watermarkLogo');
-
-          let movement = watermarkLogo.style.transform.split(",");
-
+        let movement = watermarkLogo.style.transform.split(",");
         let positiveX = !movement[0].includes("-");
         let positiveY = !movement[1].includes("-");
         let xMove = parseInt(movement[0].replace(/\D/g, ""), 10);
-        xMove = positiveX ? xMove * 1 : xMove * -1;
+              xMove = positiveX ? xMove * 1 : xMove * -1;
         let yMove = parseInt(movement[1].replace(/\D/g, ""), 10);
-        yMove = positiveY ? yMove * 1 : yMove * -1;
-        yMove = yMove;
+                yMove = positiveY ? yMove * 1 : yMove * -1;
+                
         console.log(`logo movement : xMove = ${xMove}, yMove=${yMove}`);  // er -40
         console.log(`logo movement : ${watermarkLogo.style.transform}`);  // er -40
 
-        let aspRatio = 2000 /1000 ;
-          let finalX = aspRatio *  xMove;  
-         let finalY = aspRatio *  yMove;
+        // distance  x y 
+        let aspRatiobyW = originalCoverW /pervieCoverW ;  // by width 
+        let aspRatiobyH = originalCoverH/pervieCoverH ; // by h
+
+        // xy on original img 
+          let finalX = aspRatiobyW *  xMove;  
+          let finalY = aspRatiobyH *  yMove ;
+
+         let fW = wmLogoImgcurrWidth * aspRatiobyW;
+         let fH = wmLogoImgcurrHeight * aspRatiobyH;
 
 
-         let fW =wmLogoImgcurrWidth * aspRatio;
-         let fH =wmLogoImgcurrHeight * aspRatio;
-
-        //  let fW = (2000*wmLogoImgcurrWidth)/1000;
-        //  let fH = (1250*wmLogoImgcurrHeight)/625;  // 
-
-      
-
-    
-
-        //  let perH = (wmLogoImgcurrHeight /625 ) *10;
-        //  let fperH = perH * fH ;
-
-         
-       
-         let finalLogoW =( 2000/1000 )*  wmLogoImgcurrWidth;     // 2000 = origin img width , 1000 = preview img Width 
-
-         let finalLogoH =( 2000/1000 )*  wmLogoImgcurrHeight;
-
-        let url = `ffmpeg -i resize2000x1250.jpg -i resize_logo.png -filter_complex "[1]scale=${fW}:${fH}[a];[a]lut=a=val*0.9[b];[0][b] overlay=${finalX}:${finalY}" -y watermarkLogo.jpg`
+        let url = `ffmpeg -i gridOrg.jpg -i box.jpg -filter_complex "[1]scale=${fW}:${fH}[a];[a]lut=a=val*0.9[b];[0][b] overlay=${finalX}:${finalY}" -y watermarkLogo.jpg`
   
         console.log(url);
 
@@ -354,9 +349,14 @@ class WatermarkPosition extends Component {
 
             backgroundImage: `url(${this.state.file})`,
             width: "1000px",
-            height: "625px"
-            
+            height: "750px"
+        }
 
+        let textStyle = {
+            // background: "red",
+            fontSize: this.state.fontSize,
+            opacity: `0.${this.state.opacity}`,
+            fontFamily: "Courier New"
         }
 
         return (
@@ -365,6 +365,7 @@ class WatermarkPosition extends Component {
                 <div>
                     <h4>User inputs </h4>
                     <input type="file" onChange={this.handleChange} />
+                    <input type="text" onChange={ e => this.handleChangeText(e)} />
 
                     {/* 
                      <img src={this.state.file}/> */}
@@ -390,10 +391,8 @@ class WatermarkPosition extends Component {
 
                     <div className="editor-console"
                         id="cover"
-                        style={editorConsole}>
-
-
-
+                        style={editorConsole}
+                    >
 
                         <div className="draggable-logo" 
                           id="watermarkLogo" >
@@ -406,6 +405,9 @@ class WatermarkPosition extends Component {
                         </div>
 
 
+                        <div className="draggable-text" id="watermarkText" style={textStyle} >
+                            {this.state.watermarkText}
+                        </div>
 
 
 
@@ -414,6 +416,13 @@ class WatermarkPosition extends Component {
 
                 </div>
 
+
+
+<br />
+<br />
+<br />
+<br />
+<br />
 
             </div>
         );

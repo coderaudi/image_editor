@@ -38,16 +38,13 @@ button {
 
 
 .editor-console{
-
-  background-image: url("../../assets/resize_img.jpg");
+  /* background-image: url("../../assets/resize_img.jpg"); */
   width: 1000px;
-  height: 600;
+  height: 750px;
   background-repeat: no-repeat;
   max-width: 1000px;
-  max-height: 600px;
-
+  max-height: 750px;
   margin-left: 50px;
-
 }
 
 .watermark-playground{
@@ -55,14 +52,3 @@ button {
 }
 
 
-
-.cover{
-
-
-  background-image: url(../../assets/resize_img.jpg);
-  background-repeat: no-repeat;
-
-  height: 600;
-  width : 1000;
-
-}
