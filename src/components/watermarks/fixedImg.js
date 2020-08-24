@@ -12,34 +12,36 @@ class WatermarkPosition extends Component {
         super(props);
 
         this.state = {
-            textWatermarkList : [
+            currentElementId: null,
+            logoWatermarkList : [],
+            textWatermarkList: [
                 {
                     fontSize: 20,
-                    watermarkID : "watermarkText",
+                    watermarkID: "watermarkText_0",
                     opacity: 9,
                     fontFamily: "Courier New",
-                    position: "absolute",
+                    position: "absolute",  // keep same for all
                     color: "red",
-                    watermarkText : "@ style 2020",
-                    textRotatation : 0
+                    watermarkText: "@ style 2020",
+                    textRotatation: 0
                     // transformOrigin: "0 0"
                 },
                 {
                     fontSize: 20,
-                    watermarkID : "watermarkText",
+                    watermarkID: "watermarkText_1",
                     opacity: 9,
                     fontFamily: "Courier New",
                     position: "absolute",
-                    color: "red",
-                    watermarkText : "@ style watermark2",
-                    textRotatation : 0
+                    color: "green",
+                    watermarkText: "@ style watermark2",
+                    textRotatation: 0
                     // transformOrigin: "0 0"
                 }
             ],
             fontSize: 20,
             fontColor: "red",
             rotate: 20,
-            textRotatation: 0,
+            textRotatation: 45,
             logoRoatation: 180,
             opacity: 9,
             logoOpacity: 9,
@@ -49,8 +51,8 @@ class WatermarkPosition extends Component {
             file: "",
             logoFile: "",
 
-            logoOriginalFile : null,
-            originalFile : null,
+            logoOriginalFile: null,
+            originalFile: null,
 
             // image parameters
             actualImgWidth: 1000,
@@ -58,6 +60,8 @@ class WatermarkPosition extends Component {
         }
 
         this.textRotationAngle = 10;
+        this.textWatermarkCount = 0;
+        this.logoWatermarkCount = 0; 
 
     }
 
@@ -154,45 +158,34 @@ class WatermarkPosition extends Component {
 
     }
 
-    // opacityRange 
 
-    textOpacityHandler = (e) => {
-        this.setState({
-            opacity: e.target.value
-        })
-    }
 
-    logoOpacityHandler = (e) => {
-        this.setState({
-            logoOpacity: e.target.value
-        })
-    }
-
-    FontHandler = (e) => {
-        console.log(e.target.value);
-        this.setState({
-            fontSize: e.target.value
-        })
-
-        console.log(this.state);
+    removeDomElement = (e) => {
+        let remEle =   document.getElementById(this.state.currentElementId);
+        if(remEle) document.getElementById(this.state.currentElementId).remove();
     }
 
 
     handleChange = (event) => {
-        console.log(event.target.files[0]);
+
+        
+        if( event.target.files[0]){
         this.setState({
             file: URL.createObjectURL(event.target.files[0]),
-            originalFile : event.target.files[0]
+            originalFile: event.target.files[0]
         })
+      }
     }
 
 
     handleLogoFile = (event) => {
-        console.log(event.target.files[0]);
+        if(event.target.files[0]){
+            let oldList = this.state.logoWatermarkList
+            oldList.push( event.target.files[0]);
         this.setState({
-            logoFile: URL.createObjectURL(event.target.files[0]),
-            logoOriginalFile : event.target.files[0]
+            logoWatermarkList : oldList
         })
+       }
     }
 
 
@@ -202,92 +195,131 @@ class WatermarkPosition extends Component {
         )
     }
 
-    addFont = () => {
-        this.setState({
-            fontSize: this.state.fontSize + 1
-        })
+
+    domChangeHandler = (changeParameter, value) => {
+
+        // update the element 
+
+        let modifingElement = this.state.currentElementId;
+        console.log("changing element ", modifingElement)
+        let ele = document.getElementById(modifingElement);
+        console.log(document.getElementById(modifingElement).childNodes[0].innerText);
+
+        if (changeParameter === "color") {
+            ele.style.color = value ? value : "black";
+        }
+        if (changeParameter === "opacity") {
+            ele.style.opacity = value ? `0.${value}` : "0.9";
+        }
+
+        if (changeParameter === "textRange") {
+        
+            if(modifingElement.includes("logo")){
+                ele.children[0].width =  value;
+                ele.children[0].height =  value;
+            }else{
+                console.log(value);
+                ele.style.fontSize = `${value}px`;
+            }
+        }
+
+        if (changeParameter === "watermarkText") {
+            if (value) {
+                document.getElementById(modifingElement).childNodes[0].innerText = value
+            } else {
+                document.getElementById(modifingElement).childNodes[0].innerText = "Click To Edit"
+            }
+        }
     }
 
-    removeFont = () => {
-        this.setState({
-            fontSize: this.state.fontSize - 1
-        })
-    }
 
-    increaseLogo = () => {
-        this.setState({
-            logoSize: this.state.logoSize + 5
-        })
-    }
+    finalLogoXY = (aspRatiobyW, aspRatiobyH) => {
+        let vm = this;
+        let finalLogoWatermarkList = [];
+        
 
-    reduceLogo = () => {
+        for (let index = 0; index < vm.logoWatermarkCount ; index++) {
 
-        this.setState({
-            logoSize: this.state.logoSize - 5
-        })
-    }
+        let watermarkLogo = document.getElementById(`logo-watermark-${index}`);
 
+        console.log("LLL chck" ,watermarkLogo); 
 
-    saveImg = () => {
+        let wmLogoImgcurrWidth = watermarkLogo.clientWidth;
+        let wmLogoImgcurrHeight = watermarkLogo.clientHeight - 4;
 
-        // let waterMarkText = document.getElementById('watermarkText');
-        // console.log(waterMarkText.style.transform);
+        let xyMovesLogo = this.objectMoment(watermarkLogo.style.transform);
 
-        let watermarkLogo = document.getElementById('watermarkLogo');
+         // xy on original img 
+         let finalX = aspRatiobyW * xyMovesLogo.xMove;
+         let finalY = aspRatiobyH * xyMovesLogo.yMove;
+ 
+         // final height and with of logo img and opacity
+         let fW = wmLogoImgcurrWidth * aspRatiobyW;
+         let fH = wmLogoImgcurrHeight * aspRatiobyH;
+         let opacity = watermarkLogo.style.opacity;
 
-        console.log(`logo movement : ${watermarkLogo.style.transform}`);  // er -40
+            finalLogoWatermarkList.push({
+                finalX, finalY , fW , fH , opacity
+            })
+        
+        }
 
-        // let movement = watermarkLogo.style.transform.split(",");
+         return finalLogoWatermarkList;
 
-        // let positiveX = !movement[0].includes("-");
-        // let positiveY = !movement[1].includes("-");
-        // let xMove = parseInt(movement[0].replace(/\D/g, ""), 10);
-        // xMove = positiveX ? xMove * 1 : xMove * -1;
-        // let yMove = parseInt(movement[1].replace(/\D/g, ""), 10);
-        // yMove = positiveY ? yMove * 1 : yMove * -1;
-        // yMove = yMove + 23;
-        // console.log(`logo movement : xMove = ${xMove}, yMove=${yMove}`);  // er -40
-
-        let watermarkLogoImg = document.getElementById('watermarkLogoImg');
-        let logoH = parseFloat(watermarkLogoImg.style.height);
-        let logoW = parseFloat(watermarkLogoImg.style.width);
-
-        console.log(watermarkLogoImg);
-
-        console.log(` Logo width  : ${logoW} - Logo height : ${logoH} - logo opacity : ${this.state.logoOpacity}`);  // er -40
+     }
 
 
-        // let originalImgWidth = 1000;
-        // let originalImgHight = 667;
+    finalTextXY = (aspRatiobyW, aspRatiobyH, basicData) => {
+ 
+        let vm = this;
+        let finalTextWatermarkList = [];
 
-        // let userImg = originalImgWidth > originalImgHight ? "W" : "H";
-        // let aspectRation = userImg == "W" ? originalImgWidth / 1000 : originalImgHight / 600;
+         for (let index = 0; index < vm.textWatermarkCount ; index++) {
 
+            let textElement = document.getElementById(`txt-watermark-${index}`);
+             if(textElement){
+                 console.log(textElement);
 
-        // let nLogoWidth = originalImgWidth * logoW / 800;
-        // let nLogoHeight = originalImgHight * logoH / 533.6;
+                let watermarkObj = {
+                    fontSize: parseInt(textElement.style.fontSize, 10),
+                    watermarkID: textElement.id,
+                    opacity: textElement.style.opacity,
+                    fontFamily: textElement.style.fontFamily,
+                    position: "absolute",  // keep same for all
+                    color:textElement.style.color,
+                    watermarkText: textElement.childNodes[0].innerText,
+                    textRotatation: 0
+                    // transformOrigin: "0 0"
+                }
 
-        // let nLogoOriginX = xMove * originalImgWidth / 800;
-        // let nLogoOriginY = yMove * originalImgHight / 533.6;
+                //let waterMarkText = document.getElementById(txtObj.watermarkID);
+                let xyMovesText = this.objectMoment(textElement.style.transform);
+                let finalTextX = aspRatiobyW * xyMovesText.xMove;
+                let finalTextY = aspRatiobyH * xyMovesText.yMove + (0.018 * basicData.perviewCoverH); // 0.018 y move per 1px 
+                let textFper = (watermarkObj.fontSize / basicData.previewCoverW) * 100;
+                let finalTextF = (textFper * basicData.originalCoverW) / 100;
+        
+                let textFontName = "cour";  //
+                finalTextWatermarkList.push({
+                    finalTextX,
+                    finalTextY,
+                    finalTextF,
+                    textFontName,
+                    opacity: watermarkObj.opacity,
+                    color: watermarkObj.color,
+                    watermarkText: watermarkObj.watermarkText
+                });
 
+             }
+             
+         }
 
-        // console.log(aspectRation);
-        // console.log(userImg);
-
-        // console.log(`final logo movement : xMove = ${xMove * aspectRation}, yMove=${yMove * aspectRation}`);
-        // console.log(`final Logo width : ${logoW * aspectRation} - final Logo height : ${logoH * aspectRation} - logo opacity : ${this.state.logoOpacity}`);
-
-        // let url = `ffmpeg -i ntr5.jpg -i logo3.jpg -filter_complex "[1]scale=${nLogoWidth}:${nLogoHeight}[a];[a]lut=a=val*0.9[b];[0][b] overlay=${nLogoOriginX}:${nLogoOriginY}" -y watermarkLogo.jpg`
-        // // scale => width and h of logo 
-        // // overlay => x y start position 
-        // console.log(url);
+         console.log(finalTextWatermarkList);
+         return finalTextWatermarkList;
     }
 
     objectMoment = (xyMove) => {
-
-
         if (xyMove) {
-
             let movement = xyMove.split(",");
             let positiveX = !movement[0].includes("-");
             let positiveY = !movement[1].includes("-");
@@ -300,7 +332,6 @@ class WatermarkPosition extends Component {
                 xMove,
                 yMove
             }
-
         }
     }
 
@@ -318,132 +349,205 @@ class WatermarkPosition extends Component {
 
         // bg img wh  --> preivew img height widht 
         let cover = document.querySelector("#cover");
-        let pervieCoverW = cover.clientWidth;
-        let pervieCoverH = cover.clientHeight;
+        let previewCoverW = cover.clientWidth;
+        let perviewCoverH = cover.clientHeight;
 
-        // logo w h  ==> logo height and width on preview img 
-        let wmLogoImg = document.querySelector("#watermarkLogo");
-        let wmLogoImgcurrWidth = wmLogoImg.clientWidth;
-        let wmLogoImgcurrHeight = wmLogoImg.clientHeight - 4;
 
-        console.log("details- ");
-        console.log("original w-h- ", originalCoverW, originalCoverH);
-        console.log("preview w-h- ", pervieCoverW, pervieCoverH);
-        console.log("logo preivew w-h- ", wmLogoImgcurrWidth, wmLogoImgcurrHeight);
 
+        let basicData = {
+            originalCoverW,
+            originalCoverH,
+            previewCoverW,
+            perviewCoverH
+        }
+
+        console.log("details- " , basicData);
         // for watermark text 
-        let waterMarkText = document.getElementById('watermarkText');
-        console.log(waterMarkText.style.transform);
 
-        let watermarkLogo = document.getElementById('watermarkLogo');
-
-        let xyMovesLogo = this.objectMoment(watermarkLogo.style.transform);
-        let xyMovesText = this.objectMoment(waterMarkText.style.transform);
-
-        console.log("logo", xyMovesLogo, "txt", xyMovesText);
+  
 
         // distance  x y 
-        let aspRatiobyW = originalCoverW / pervieCoverW;  // by width 
-        let aspRatiobyH = originalCoverH / pervieCoverH; // by h
+        let aspRatiobyW = originalCoverW / previewCoverW;  // by width 
+        let aspRatiobyH = originalCoverH / perviewCoverH; // by h
 
-        // xy on original img 
-        let finalX = aspRatiobyW * xyMovesLogo.xMove;
-        let finalY = aspRatiobyH * xyMovesLogo.yMove;
+       
 
-        let fW = wmLogoImgcurrWidth * aspRatiobyW;
-        let fH = wmLogoImgcurrHeight * aspRatiobyH;
+        let resList = this.finalTextXY(aspRatiobyW, aspRatiobyH, basicData);
+        let resLogoList = this.finalLogoXY(aspRatiobyW, aspRatiobyH , basicData);
 
-        let finalTextX = aspRatiobyW * xyMovesText.xMove;
-        let finalTextY = aspRatiobyH * xyMovesText.yMove + (0.018 * pervieCoverH); // 0.018 y move per 1px 
+      //  let finalText1 = this.finalTextXY(aspRatiobyW, aspRatiobyH, txtWatermarkObj1, basicData);
 
-
-        let textFper = (this.state.fontSize / pervieCoverW) * 100;
-        let finalTextF = (textFper * originalCoverW) / 100;
+        let finalText = resList[0];
+        let finalText1 =  resList[1];
 
 
-        let url = `ffmpeg -i gridOrg.jpg -i box.jpg -filter_complex "[1]scale=${fW}:${fH}[a];[a]lut=a=val*0.9[b];[0][b] overlay=${finalX}:${finalY}" -y watermarkLogo.jpg`
-        let txtUrl = `ffmpeg -i gridOrg1.jpg -filter_complex "[0]drawtext=fontfile=cour.ttf:text='${this.state.watermarkText}':fontcolor=${this.state.fontColor}:fontsize=${finalTextF}:x=${finalTextX}:y=${finalTextY}" -y restextWatermark.jpg`
+
+        let finalLogo1 = resLogoList[0];
+
+        let fW = finalLogo1.fW ;
+        let fH = finalLogo1.fH ;
+        let finalX= finalLogo1.finalX ;
+        let finalY= finalLogo1.finalY ;
+        let finalLogoOpacity = finalLogo1.opacity;
+
+        // let finalTextX = aspRatiobyW * xyMovesText.xMove;
+        // let finalTextY = aspRatiobyH * xyMovesText.yMove + (0.018 * perviewCoverH); // 0.018 y move per 1px 
+
+
+        // let textFper = (this.state.fontSize / previewCoverW) * 100;
+        // let finalTextF = (textFper * originalCoverW) / 100;
+
+        // finalTextX,finalTextY,finalTextF
+
+
+        // let url = `ffmpeg -i gridOrg.jpg -i box.jpg -filter_complex "[1]scale=${fW}:${fH}[a];[a]lut=a=val*0.9[b];[0][b] overlay=${finalX}:${finalY}" -y watermarkLogo.jpg`
+        //let txtUrl = `ffmpeg -i gridOrg1.jpg -filter_complex "[0]drawtext=fontfile=cour.ttf:text='${this.state.watermarkText}':fontcolor=${this.state.fontColor}:fontsize=${finalTextF}:x=${finalTextX}:y=${finalTextY}" -y restextWatermark.jpg`
 
         // console.log(txtUrl);
 
-       let logoRotation = `ffmpeg -i gridOrg.jpg -i logoA.png -filter_complex "[1]scale=${fW}:${fH}[a];[a]rotate='${this.state.logoRoatation}*PI/180:ow=hypot(iw,ih):oh=ow:c=none'[a];[0][a]overlay=${finalX}:${finalY}" -y testRotation.jpg`
+        // let logoRotation = `ffmpeg -i gridOrg.jpg -i logoA.png -filter_complex "[1]scale=${fW}:${fH}[a];[a]rotate='${this.state.logoRoatation}*PI/180:ow=hypot(iw,ih):oh=ow:c=none'[a];[0][a]overlay=${finalX}:${finalY}" -y testRotation.jpg`
 
-        let urlTextLogo = `ffmpeg -i gridOrg.jpg -i ${this.state.logoOriginalFile.name} -filter_complex "[1]scale=${fW}:${fH}[t],[t]lut=a=val*0.${this.state.logoOpacity}[t],[t]rotate=${this.state.logoRoatation}*PI/180[t],[0][t]overlay=${finalX}:${finalY}[i1];[i1]drawtext=fontfile='cour.ttf': text='${this.state.watermarkText}':fontcolor=${this.state.fontColor}@0.${this.state.opacity}:fontsize=${finalTextF}:x=${finalTextX}:y=${finalTextY}" -y res_logoText.jpg`;
+        // let urlTextLogo = `ffmpeg -i gridOrg.jpg -i ${this.state.logoOriginalFile.name} -filter_complex "[1]scale=${fW}:${fH}[t],[t]lut=a=val*0.${this.state.logoOpacity}[t],[t]rotate=${this.state.logoRoatation}*PI/180[t],[0][t]overlay=${finalX}:${finalY}[i1];[i1]drawtext=fontfile='${finalText.textFontName}.ttf': text='${finalText.watermarkText}':fontcolor=${finalText.color}@0.${finalText.opacity}:fontsize=${finalText.finalTextF}:x=${finalText.finalTextX}:y=${finalText.finalTextY}" -y res_logoText.jpg`;
 
-        console.log(urlTextLogo);   
-   
+        // console.log(urlTextLogo);
 
+        // let multiLoogSinglelogUrl = `ffmpeg -i gridOrg.jpg  -i ${this.state.logoOriginalFile.name} -i ${this.state.logoOriginalFile.name} -filter_complex "[1]scale=${fW}:${fH}[t],[t]lut=a=val*0.${this.state.logoOpacity}[t],
+        // [t]rotate=${this.state.logoRoatation}*PI/180[t],[0][t]overlay=${finalX}:${finalY}[i1];
+        //  [2]scale=${fW}:${fH}[t],[t]lut=a=val*0.${this.state.logoOpacity}[t],[t]rotate=${this.state.logoRoatation}*PI/180[t],[i1][t]overlay=${finalX + 200}:${finalY}[i2];
+        //  [i2]drawtext=fontfile=cour.ttf: text='India':fontcolor=red@0.8:fontsize=20:x=300:y=20" -preset ultrafast -y multiLogo.jpg
+        // `
+
+        // (finalText , finalText1);
+        let multiTextsingeLogo = `ffmpeg -i gridOrg.jpg -i box.jpg
+         -filter_complex "[1]scale=${fW}:${fH}[t],[t]lut=a=val*${finalLogoOpacity}[t],[t]rotate=${this.state.logoRoatation}*PI/180[t],[0][t]overlay=${finalX}:${finalY}[i1];
+        [i1]drawtext=fontfile=${finalText.textFontName}.ttf: text='${finalText.watermarkText}':fontcolor=${finalText.color}@${finalText.opacity}:fontsize=${finalText.finalTextF}:x=${finalText.finalTextX}:y=${finalText.finalTextY}[i2];
+        [i2]drawtext=fontfile=${finalText1.textFontName}.ttf: text='${finalText1.watermarkText}':fontcolor=${finalText1.color}@${finalText1.opacity}:fontsize=${finalText1.finalTextF}:x=${finalText1.finalTextX}:y=${finalText1.finalTextY}" -preset ultrafast -y res_multy_text.jpg`
+
+        console.log(multiTextsingeLogo);
+    }
+
+
+    addLogoWatermark = () => {
+
+
+        let vm = this;
+
+        let logoList = vm.state.logoWatermarkList;
+
+        // let logoStyle = {
+        //     width: this.state.logoSize,
+        //     opacity: `0.${this.state.logoOpacity}`,
+        //     transform: `rotate(${this.state.logoRoatation}deg)`
+        // }
+
+       let logoPreviewUrl = URL.createObjectURL(logoList[0]);
+
+
+        // URL.createObjectURL(
+
+        // <div className="draggable-logo"
+        // id="watermarkLogo"
+        // style={{ position: "absolute" }} >
+        // <img src={this.state.logoFile}
+        //     id="watermarkLogoImg"
+        //     style={logoStyle}
+
+        //     className="resizable-logo"
+        //     />
+        // </div>
+
+
+
+    //     let vm = this;
+        let defaultLogo = {
+           
+            watermarkID: `logo-watermark-${vm.logoWatermarkCount}`,
+            opacity: 9,
+    
+            position: "absolute",  // keep same for all
         
+            logoRotatation: 0
+        }
+
+        let logoOne = defaultLogo;
+
+        let logoStyle = `opacity:0.${logoOne.opacity};  position: absolute; `;
+        let newLogoWatermark = document.createElement('div'); // is a node
+            newLogoWatermark.setAttribute("class", "draggable-logo");
+            newLogoWatermark.setAttribute("style", logoStyle);
+            newLogoWatermark.setAttribute("id", `${logoOne.watermarkID}`);
+
+
+        let subImgDiv = document.createElement('IMG');
+        
+        subImgDiv.setAttribute("src", logoPreviewUrl);
+        subImgDiv.setAttribute("width", "80");
+        subImgDiv.setAttribute("height", "80");
+        subImgDiv.setAttribute("alt", `logo-${logoOne.watermarkID}`);
+
+    //     subImgDiv.setAttribute("style", `transform : rotate(${logoOne.logoRotatation}deg)`);
+    //     // subImgDiv.innerHTML = `${logoOne.watermarkText}`;
+          newLogoWatermark.appendChild(subImgDiv);
+          console.log(newLogoWatermark);
+
+            newLogoWatermark.onclick = function () {
+                vm.setState({ currentElementId: `${logoOne.watermarkID}` })
+                console.log("ele changed ", newLogoWatermark, vm.state);
+            };
+
+    //     // add to dom 
+             document.getElementById("cover").prepend(newLogoWatermark);
+             vm.logoWatermarkCount++;
+
+
+    console.log("img added");
 
     }
 
 
-    addTextWatermark = () =>{
 
-        let userTextWatermarkList = [
-            {
-                watermarkID : "watermarkText",
-                fontSize: this.state.fontSize,
-                opacity: `0.${this.state.opacity}`,
-                fontFamily: "Courier New",
-                position: "absolute",
-                color: this.state.fontColor,
-                watermarkText : "@ style",
-                textRotatation : 45
-                // transformOrigin: "0 0"
-            }
-        ]
+    addTextWatermark = () => {
 
-        userTextWatermarkList = this.state.textWatermarkList;
-     
-        let textOne = userTextWatermarkList[0];
+        let vm = this;
+        let defaultText = {
+            fontSize: 20,
+            watermarkID: `txt-watermark-${vm.textWatermarkCount}`,
+            opacity: 9,
+            fontFamily: "Courier New",
+            position: "absolute",  // keep same for all
+            color: "red",
+            watermarkText: "New Watermark",
+            textRotatation: 0
+        }
+        if(vm.state.logoWatermarkList.length > 0) { 
+
+        let textOne = defaultText
 
         let textOneStyle = `font-size: ${textOne.fontSize}px; opacity:0.${textOne.opacity}; font-family: ${textOne.fontFamily}; position: absolute; color:${textOne.color}`;
         let newTextWatermark = document.createElement('div'); // is a node
 
-             newTextWatermark.setAttribute("class", "draggable-text");
-             newTextWatermark.setAttribute("style", textOneStyle);
-             newTextWatermark.setAttribute("id", `${textOne.watermarkID}`);
+        newTextWatermark.setAttribute("class", "draggable-text");
+        newTextWatermark.setAttribute("style", textOneStyle);
+        newTextWatermark.setAttribute("id", `${textOne.watermarkID}`);
+        console.log(newTextWatermark);
 
-             let subTextdiv = document.createElement('div');
-                 subTextdiv.setAttribute("style", `transform : rotate(${textOne.textRotatation}deg)`);
-                 subTextdiv.innerHTML = `${textOne.watermarkText}`;
-                 newTextWatermark.appendChild(subTextdiv);
+        let subTextdiv = document.createElement('div');
+        subTextdiv.setAttribute("style", `transform : rotate(${textOne.textRotatation}deg)`);
+        subTextdiv.innerHTML = `${textOne.watermarkText}`;
+        newTextWatermark.appendChild(subTextdiv);
 
-                // add to dom 
+        newTextWatermark.onclick = function () {
+            vm.setState({ currentElementId: `${textOne.watermarkID}` })
+            console.log("ele changed ", newTextWatermark, vm.state);
+        };
 
-                console.log(newTextWatermark);
-                document.getElementById("cover").appendChild(newTextWatermark);
-
-                textOne = userTextWatermarkList[1];
-
-                 textOneStyle = `font-size: ${textOne.fontSize}px; opacity:0.${textOne.opacity}; font-family: ${textOne.fontFamily}; position: absolute; color:${textOne.color}`;
-                 newTextWatermark = document.createElement('div'); // is a node
-        
-                     newTextWatermark.setAttribute("class", "draggable-text");
-                     newTextWatermark.setAttribute("style", textOneStyle);
-                     newTextWatermark.setAttribute("id", `${textOne.watermarkID}`);
-        
-                 subTextdiv = document.createElement('div');
-                         subTextdiv.setAttribute("style", `transform : rotate(${textOne.textRotatation}deg)`);
-                         subTextdiv.innerHTML = `${textOne.watermarkText}`;
-                         newTextWatermark.appendChild(subTextdiv);
-        
-                        // add to dom 
-        
-                        console.log(newTextWatermark);
-                        document.getElementById("cover").appendChild(newTextWatermark);
-
+        // add to dom 
+        document.getElementById("cover").appendChild(newTextWatermark);
+        vm.textWatermarkCount++;
+     }
     }
 
     render() {
-
-
-        let logoStyle = {
-            width: this.state.logoSize,
-            opacity: `0.${this.state.logoOpacity}`,
-            transform: `rotate(${this.state.logoRoatation}deg)`
-        }
 
         let editorConsole = {
             position: "relative",
@@ -452,41 +556,46 @@ class WatermarkPosition extends Component {
             height: "375px",
         }
 
-     
+
 
         return (
             <div>
 
                 <div>
-                    <h4>User inputs </h4>
-                    text Opacity : <input type="range" name="points" min="0" max="9"
-                        onChange={e => this.textOpacityHandler(e)} />
-                    {/* Font :  <input type="range" name="font" min={10} max={100} 
-                            onChange={e => this.FontHandler(e)} /> */}
-                    Logo Opacity : <input type="range" name="logoOpacity" min="0" max="9"
-                        onChange={e => this.logoOpacityHandler(e)} />
-                  
-                    Logo Rotation : <input type="range" name="logoRotation" min="0" max="360"
-                        onChange={(e) => this.setState({ logoRoatation: parseInt(e.target.value, 10) })} />
-                    Text Rotation : <input type="range" name="logoRotation" min="0" max="360"
-                        onChange={(e) => this.setState({ textRotatation: parseInt(e.target.value, 10) })} />
-                        <br />
+                    <h4>User Inputs</h4>
                     cover: <input type="file" onChange={this.handleChange} />
                     logo : <input type="file" onChange={this.handleLogoFile} />
-                    text : <input type="text" value={this.state.watermarkText} onChange={e => this.handleChangeText(e)} />
+                    <button onClick={ () => {this.addLogoWatermark()}}>Add Logo</button>
+        
+                    <br />
+
+                    text Editor :
+                    text : <input type="text" onChange={e => this.domChangeHandler("watermarkText", e.target.value)} />
+                    <select id="textColors" onChange={e => this.domChangeHandler("color", e.target.value)}>
+                        <option value="red">red</option>
+                        <option value="yellow">yellow</option>
+                        <option value="pink">pink</option>
+                        <option value="blue">blue</option>
+                    </select>
+
+                     Opacity : <input type="range" name="points" min="1" max="9"
+                        onChange={e => this.domChangeHandler("opacity", e.target.value)} />
+                     Size : <input type="range" name="points" min="5" max="100"
+                        onChange={e => this.domChangeHandler("textRange", e.target.value)} />
+                    <br />
+
+
                     {/* logoRotate <input type="number" onChange={ (e) => this.setState({ textRotatation : parseInt(e.target.value, 10)})} />  */}
+
+
 
                 </div>
 
                 <span>
-                    <button onClick={() => this.addFont()}>Font++</button>
-                    <button onClick={() => this.removeFont()}>Font --</button>
-                    <button onClick={() => this.increaseLogo()}> logo ++</button>
-                    <button onClick={() => this.reduceLogo()}> logo -- </button>
-                    {/* <button onClick={() => this.saveImg()}> Save Img</button> */}
+        
                     <button onClick={() => this.checkImg()}> check Img</button>
-
-                    <button onClick={ () => this.addTextWatermark()} > Add Text</button>
+                    <button onClick={() => this.addTextWatermark()} > Add Text</button>
+                    <button onClick={ () => this.removeDomElement()} >Remove Ele</button>
 
                 </span>
                 <hr />
@@ -498,7 +607,7 @@ class WatermarkPosition extends Component {
                         style={editorConsole}
                     >
 
-                        <div className="draggable-logo"
+                        {/* <div className="draggable-logo"
                             id="watermarkLogo"
                             style={{ position: "absolute" }} >
                             <img src={this.state.logoFile}
@@ -507,7 +616,7 @@ class WatermarkPosition extends Component {
 
                                 className="resizable-logo"
                             />
-                        </div>
+                        </div> */}
 
                     </div>
 

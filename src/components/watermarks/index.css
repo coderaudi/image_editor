@@ -35,7 +35,11 @@ button {
 }
 
 
-
+.watermark-playground{
+  background: #c5bebe;
+  width: 600px;
+  margin-left: 10%;
+}
 
 .editor-console{
   /* background-image: url("../../assets/resize_img.jpg"); */
@@ -45,6 +49,38 @@ button {
   max-width: 1000px;
   max-height: 750px;
   margin-left: 50px;
+
 }
 
+
+
+.watermarkText1{
+  opacity: 0.9;
+}
+
+
+/* onmove logo text outline style */
+
+.draggable-text :hover{
+  outline: 3px dashed blue;
+  outline-offset: 5px;
+}
+
+.draggable-logo :hover{
+  outline: 3px dashed blue;
+  outline-offset: 5px;
+}
+
+
+
+
+
+
+/* testing video divs */
+
+#video-container {
+	position: relative;
+  overflow: hidden;
+  /* position: absolute; */
+}
 

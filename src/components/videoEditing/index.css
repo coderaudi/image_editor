@@ -1,0 +1,53 @@
+.draggable {
+    touch-action: none;
+    user-select: none;
+  }
+
+
+.draggable-text{
+ width: fit-content;
+ /* -ms-transform: rotate(20deg); /* IE 9
+  -webkit-transform: rotate(20deg); /* Safari 3-8 
+  transform: rotate(20deg); */
+}
+
+.draggable-logo{
+  width: fit-content;
+}
+
+.resizable-logo{
+  width: fit-content;
+}
+
+
+
+button {
+  border: none;
+  outline: 0;
+  display: inline-block;
+  padding: 8px;
+  color: white;
+  background-color: #000;
+  text-align: center;
+  cursor: pointer;
+  width: fit-content;
+  font-size: 18px;
+}
+
+
+.editor-console{
+  /* background-image: url("../../assets/resize_img.jpg"); */
+  width: 1000px;
+  height: 750px;
+  background-repeat: no-repeat;
+  max-width: 1000px;
+  max-height: 750px;
+  margin-left: 50px;
+
+}
+
+
+
+.watermarkText1{
+  opacity: 0.9;
+}
